@@ -1,11 +1,9 @@
 {
   "name": "hajussysteemid-prax-1",
+  "type": "module",
   "version": "1.0.0",
   "description": "http://lambda.ee/wiki/Vorgurakendused_2_prax_1_2022_kevad",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/maidy2000/hajussysteemid-prax-1.git"
@@ -15,5 +13,9 @@
   "bugs": {
     "url": "https://github.com/maidy2000/hajussysteemid-prax-1/issues"
   },
-  "homepage": "https://github.com/maidy2000/hajussysteemid-prax-1#readme"
+  "homepage": "https://github.com/maidy2000/hajussysteemid-prax-1#readme",
+  "dependencies": {
+    "lowdb": "^3.0.0",
+    "pm2": "^5.2.0"
+  }
 }

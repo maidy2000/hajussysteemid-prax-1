@@ -4,7 +4,9 @@ import * as http from "http";
 import axios from "axios";
 
 const HOST = process.env.HOST ? process.env.HOST : "0.0.0.0";
-const PORT = process.env.PORT ? process.env.PORT : 8080;
+const PORT = process.env.PORT ? process.env.PORT : 5555;
+const REQUEST_TIMEOUT_MILLIS = 2000;
+const POLLING_INTERVAL_MILLIS = 10000;
 
 const adapter = new JSONFile("database.json");
 const db = new Low(adapter);
@@ -13,7 +15,7 @@ const poller = async () => {
   await db.read();
   db.data.addresses.forEach(async (address) => {
     await axios
-      .get("http://" + address + "/addresses", { timeout: 2000 })
+      .get("http://" + address + "/addresses", { timeout: REQUEST_TIMEOUT_MILLIS })
       .then((res) => {
         res.data.forEach((newAddress) => registerAddress(newAddress));
       })
@@ -22,7 +24,7 @@ const poller = async () => {
       });
 
     await axios
-      .get("http://" + address + "/blocks", { timeout: 2000 })
+      .get("http://" + address + "/blocks", { timeout: REQUEST_TIMEOUT_MILLIS })
       .then((res) => {
         res.data.forEach((block) => writeBlock(block));
       })
@@ -56,9 +58,7 @@ const requestListener = async (req, res) => {
   if (req.url === "/addresses") {
     res.end(JSON.stringify(db.data.addresses));
     res.writeHead(200);
-    await registerAddress(
-      `${req.socket.remoteAddress}:${req.socket.remotePort}`
-    );
+    await registerAddress(`${req.socket.remoteAddress}:${PORT}`);
     return;
   }
 
@@ -69,7 +69,6 @@ const requestListener = async (req, res) => {
 async function registerAddress(address) {
   db.read();
 
-  address = address + ":5555";
   if (db.data.addresses.includes(address)) {
     return;
   }
@@ -80,12 +79,11 @@ async function registerAddress(address) {
 
 function writeBlock(content) {
   db.read();
-  
+
   var hash = createHash("sha256").update(content).digest("hex");
 
   // don't allow duplicates
-  if (db.data.blocks.some(block => block.id === hash)) {
-    console.log(block.id, hash);
+  if (db.data.blocks.some((block) => block.id === hash)) {
     return;
   }
 
@@ -100,4 +98,4 @@ server.listen(PORT, HOST, () => {
   console.log(`Server is running on http://${HOST}:${PORT}`);
 });
 
-setInterval(poller, 5000);
+setInterval(poller, POLLING_INTERVAL_MILLIS);

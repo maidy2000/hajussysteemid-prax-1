@@ -15,6 +15,7 @@
   },
   "homepage": "https://github.com/maidy2000/hajussysteemid-prax-1#readme",
   "dependencies": {
+    "axios": "^0.26.1",
     "lowdb": "^3.0.0",
     "pm2": "^5.2.0"
   }

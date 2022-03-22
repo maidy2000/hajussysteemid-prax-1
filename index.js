@@ -1,18 +1,38 @@
 import { Low, JSONFile } from "lowdb";
-import { createHash } from 'crypto';
+import { createHash } from "crypto";
 import * as http from "http";
+import axios from "axios";
 
-const HOST = process.env.HOST ? process.env.HOST : "localhost";
+const HOST = process.env.HOST ? process.env.HOST : "0.0.0.0";
 const PORT = process.env.PORT ? process.env.PORT : 8080;
-const IGNORED_ADDRESSES = ["127.0.0.1"];
 
 const adapter = new JSONFile("database.json");
 const db = new Low(adapter);
 
-await db.read();
+const poller = async () => {
+  await db.read();
+  db.data.addresses.forEach(async (address) => {
+    await axios
+      .get("http://" + address + "/addresses", { timeout: 2000 })
+      .then((res) => {
+        res.data.forEach((newAddress) => registerAddress(newAddress));
+      })
+      .catch(() => {
+        // ignore errors
+      });
+
+    await axios
+      .get("http://" + address + "/blocks", { timeout: 2000 })
+      .then((res) => {
+        res.data.forEach((block) => writeBlock(block));
+      })
+      .catch(() => {
+        // ignore errors
+      });
+  });
+};
 
 const requestListener = async (req, res) => {
-  console.log(req.url);
   if (!["/blocks", "/addresses"].includes(req.url)) {
     res.writeHead(404, "Not Found");
     res.end();
@@ -25,8 +45,10 @@ const requestListener = async (req, res) => {
     return;
   }
 
+  await db.read();
+
   if (req.url === "/blocks") {
-    res.end(JSON.stringify(db.data.blocks.map(x => x["id"])));
+    res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
     res.writeHead(200);
     return;
   }
@@ -34,7 +56,9 @@ const requestListener = async (req, res) => {
   if (req.url === "/addresses") {
     res.end(JSON.stringify(db.data.addresses));
     res.writeHead(200);
-    await registerAddress(req.socket.remoteAddress);
+    await registerAddress(
+      `${req.socket.remoteAddress}:${req.socket.remotePort}`
+    );
     return;
   }
 
@@ -42,17 +66,11 @@ const requestListener = async (req, res) => {
   res.end();
 };
 
-const server = http.createServer(requestListener);
-server.listen(PORT, HOST, () => {
-  console.log(`Server is running on http://${HOST}:${PORT}`);
-});
-
 async function registerAddress(address) {
-  if (db.data.addresses.includes(address)) {
-    return;
-  }
+  db.read();
 
-  if (IGNORED_ADDRESSES.includes(address)) {
+  address = address + ":5555";
+  if (db.data.addresses.includes(address)) {
     return;
   }
 
@@ -61,9 +79,25 @@ async function registerAddress(address) {
 }
 
 function writeBlock(content) {
-  var hash = createHash('sha256').update(content).digest('hex');
-  db.data.blocks.push({id: hash, content: content});
+  db.read();
+  
+  var hash = createHash("sha256").update(content).digest("hex");
+
+  // don't allow duplicates
+  if (db.data.blocks.some(block => block.id === hash)) {
+    console.log(block.id, hash);
+    return;
+  }
+
+  db.data.blocks.push({ id: hash, content: content });
   db.write();
 }
 
-//writeBlock("My first block");
+await db.read();
+
+const server = http.createServer(requestListener);
+server.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
+});
+
+setInterval(poller, 5000);

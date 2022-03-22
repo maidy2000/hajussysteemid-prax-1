@@ -1,4 +1,5 @@
 import { Low, JSONFile } from "lowdb";
+import { createHash } from 'crypto';
 import * as http from "http";
 
 const HOST = process.env.HOST ? process.env.HOST : "localhost";
@@ -25,7 +26,7 @@ const requestListener = async (req, res) => {
   }
 
   if (req.url === "/blocks") {
-    res.end(JSON.stringify(db.data.blocks));
+    res.end(JSON.stringify(db.data.blocks.map(x => x["id"])));
     res.writeHead(200);
     return;
   }
@@ -58,3 +59,11 @@ async function registerAddress(address) {
   db.data.addresses.push(address);
   await db.write();
 }
+
+function writeBlock(content) {
+  var hash = createHash('sha256').update(content).digest('hex');
+  db.data.blocks.push({id: hash, content: content});
+  db.write();
+}
+
+//writeBlock("My first block");

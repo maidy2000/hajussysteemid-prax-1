@@ -2,5 +2,10 @@
   "addresses": [
     "123.32.123.32"
   ],
-  "blocks": []
+  "blocks": [
+    {
+      "id": "ef4de9ddb6f6747d4b0f61d52997cbc9f0869310bfa170e1b66adb58a12ed255",
+      "content": "My first block"
+    }
+  ]
 }

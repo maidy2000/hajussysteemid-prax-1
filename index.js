@@ -75,7 +75,7 @@ const requestListener = async (req, res) => {
   if (splitUrl[1] === "addresses") {
     res.end(JSON.stringify(db.data.addresses));
     res.writeHead(200);
-    await registerAddress(`${req.socket.remoteAddress}:${PORT}`);
+    await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
     return;
   }
 

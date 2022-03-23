@@ -193,5 +193,3 @@ server.listen(PORT, HOST, () => {
 });
 
 setInterval(poller, POLLING_INTERVAL_MILLIS);
-
-console.log(createHash("sha256").update("Another another block").digest("hex"));

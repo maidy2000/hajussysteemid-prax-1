@@ -36,7 +36,7 @@ const poller = async () => {
 
 const requestListener = async (req, res) => {
   const splitUrl = req.url.split("/");
-  if (!["blocks", "addresses"].includes(splitUrl[1])) {
+  if (splitUrl.length < 2 || !["blocks", "addresses", "getData"].includes(splitUrl[1])) {
     res.writeHead(404, "Not Found");
     res.end();
     return;
@@ -51,6 +51,22 @@ const requestListener = async (req, res) => {
   await db.read();
 
   if (splitUrl[1] === "blocks") {
+    if (splitUrl.length === 3) {
+      const target = splitUrl[2];
+      console.log("Looking for " + target);
+      let correctBlocks = [];
+      let found = false;
+      for (let i = 0; i < db.data.blocks.length; i++) {
+        if (found) {
+          correctBlocks.push(db.data.blocks[i]);
+        } else if (db.data.blocks[i]["id"] === target) {
+          found = true;
+        }
+      }
+      res.end(JSON.stringify(correctBlocks.map(x => x["id"])));
+      res.writeHead(200);
+      return;
+    }
     res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
     res.writeHead(200);
     return;
@@ -61,6 +77,21 @@ const requestListener = async (req, res) => {
     res.writeHead(200);
     await registerAddress(`${req.socket.remoteAddress}:${PORT}`);
     return;
+  }
+
+  if (splitUrl[1] === "getData") {
+    if (splitUrl.length === 3) {
+      const target = splitUrl[2];
+      for (let i = 0; i < db.data.blocks.length; i++) {
+        if (db.data.blocks[i]["id"] === target) {
+          res.end(JSON.stringify(db.data.blocks[i]));
+          res.writeHead(200);
+          return;
+        }
+      }
+      // RETURN NO BLOCK
+    }
+    // RETURN INVALID REQUEST
   }
 
   res.writeHead(500);

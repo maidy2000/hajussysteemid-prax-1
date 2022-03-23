@@ -15,7 +15,7 @@ const poller = async () => {
   await db.read();
   db.data.addresses.forEach(async (address) => {
     await axios
-      .get("http://" + address + "/addresses", { timeout: REQUEST_TIMEOUT_MILLIS })
+      .get("http://" + address + "/addresses", { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT } })
       .then((res) => {
         res.data.forEach((newAddress) => registerAddress(newAddress));
       })
@@ -24,7 +24,7 @@ const poller = async () => {
       });
 
     await axios
-      .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1], { timeout: REQUEST_TIMEOUT_MILLIS })
+      .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1], { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  })
       .then((res) => {
         res.data.forEach((block) => getBlockFromAddress(block, address));
       })
@@ -60,12 +60,12 @@ const requestListener = async (req, res) => {
           writeBlock(data["content"]);
           res.end("1");
           res.writeHead(200);
-          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+          registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
           db.data.addresses.forEach(async (address) => {
             await axios.post(
                 "http://" + address + "/block",
                 {id: data["id"], content: data["content"]},
-                { timeout: REQUEST_TIMEOUT_MILLIS }
+                { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  }
             ).catch(() => {
               // ignore errors
             });
@@ -73,19 +73,19 @@ const requestListener = async (req, res) => {
         } else {
           res.end(JSON.stringify({"error": "Block already exists"}))
           res.writeHead(406);
-          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+          registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
         }
       } else if (splitUrl[1] === "inv") {
         if (!db.data.transactions.map(x => x["id"]).includes(data["id"])) {
           writeTransaction(data["content"]);
           res.end("1");
           res.writeHead(200);
-          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+          registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
           db.data.addresses.forEach(async (address) => {
             await axios.post(
                 "http://" + address + "/inv",
                 {id: data["id"], content: data["content"]},
-                { timeout: REQUEST_TIMEOUT_MILLIS }
+                { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  }
             ).catch(() => {
               // ignore errors
             });
@@ -93,7 +93,7 @@ const requestListener = async (req, res) => {
         } else {
           res.end(JSON.stringify({"error": "Transaction already exists"}))
           res.writeHead(406);
-          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+          registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
         }
       }
     })
@@ -114,19 +114,19 @@ const requestListener = async (req, res) => {
       }
       res.end(JSON.stringify(correctBlocks.map(x => x["id"])));
       res.writeHead(200);
-      await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+      await registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
       return;
     }
     res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
     res.writeHead(200);
-    await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+    await registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
     return;
   }
 
   if (splitUrl[1] === "addresses") {
     res.end(JSON.stringify(db.data.addresses));
     res.writeHead(200);
-    await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+    await registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
     return;
   }
 
@@ -137,7 +137,7 @@ const requestListener = async (req, res) => {
         if (db.data.blocks[i]["id"] === target) {
           res.end(JSON.stringify(db.data.blocks[i]));
           res.writeHead(200);
-          await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
+          await registerAddress(`${req.socket.remoteAddress}:${req.getHeader("port")}`);
           return;
         }
       }
@@ -211,4 +211,4 @@ server.listen(PORT, HOST, () => {
 
 setInterval(poller, POLLING_INTERVAL_MILLIS);
 
-console.log(createHash("sha256").update("Test 4 block").digest("hex"));
+console.log(createHash("sha256").update("Test 5 block").digest("hex"));

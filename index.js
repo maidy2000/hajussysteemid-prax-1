@@ -6,7 +6,7 @@ import axios from "axios";
 const HOST = process.env.HOST ? process.env.HOST : "0.0.0.0";
 const PORT = process.argv.length >= 3 ? parseInt(process.argv[2]) : 5555;
 const REQUEST_TIMEOUT_MILLIS = 2000;
-const POLLING_INTERVAL_MILLIS = 10000;
+const POLLING_INTERVAL_MILLIS = 1000;
 
 const adapter = new JSONFile("database.json");
 const db = new Low(adapter);

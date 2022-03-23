@@ -60,6 +60,7 @@ const requestListener = async (req, res) => {
           writeBlock(data["content"]);
           res.end("1");
           res.writeHead(200);
+          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
           db.data.addresses.forEach(async (address) => {
             await axios.post(
                 "http://" + address + "/block",
@@ -72,12 +73,14 @@ const requestListener = async (req, res) => {
         } else {
           res.end(JSON.stringify({"error": "Block already exists"}))
           res.writeHead(406);
+          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
         }
       } else if (splitUrl[1] === "inv") {
         if (!db.data.transactions.map(x => x["id"]).includes(data["id"])) {
           writeTransaction(data["content"]);
           res.end("1");
           res.writeHead(200);
+          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
           db.data.addresses.forEach(async (address) => {
             await axios.post(
                 "http://" + address + "/inv",
@@ -90,6 +93,7 @@ const requestListener = async (req, res) => {
         } else {
           res.end(JSON.stringify({"error": "Transaction already exists"}))
           res.writeHead(406);
+          registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
         }
       }
     })
@@ -110,10 +114,12 @@ const requestListener = async (req, res) => {
       }
       res.end(JSON.stringify(correctBlocks.map(x => x["id"])));
       res.writeHead(200);
+      await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
       return;
     }
     res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
     res.writeHead(200);
+    await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
     return;
   }
 
@@ -131,6 +137,7 @@ const requestListener = async (req, res) => {
         if (db.data.blocks[i]["id"] === target) {
           res.end(JSON.stringify(db.data.blocks[i]));
           res.writeHead(200);
+          await registerAddress(`${req.socket.remoteAddress}:${req.socket.remotePort}`);
           return;
         }
       }

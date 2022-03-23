@@ -63,7 +63,7 @@ const requestListener = async (req, res) => {
           res.writeHead(200);
           registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
           db.data.addresses.forEach(async (address) => {
-            await axios.post(
+            axios.post(
                 "http://" + address + "/block",
                 {id: data["id"], content: data["content"]},
                 { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  }
@@ -83,7 +83,7 @@ const requestListener = async (req, res) => {
           res.writeHead(200);
           registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
           db.data.addresses.forEach(async (address) => {
-            await axios.post(
+            axios.post(
                 "http://" + address + "/inv",
                 {id: data["id"], content: data["content"]},
                 { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  }

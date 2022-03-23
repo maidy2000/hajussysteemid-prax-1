@@ -53,9 +53,16 @@ const requestListener = async (req, res) => {
 
   if (req.method === "POST") {
     let data = "";
-    req.on("data", chunk => { data += chunk.toString() });
+    req.on("data", chunk => {data += chunk.toString()});
     req.on("end", () => {
       data = JSON.parse(data);
+
+      if (!validData(data)) {
+        res.writeHead(406);
+        res.end(JSON.stringify({"error": "Invalid block or transaction data"}));
+        return;
+      }
+
       if (splitUrl[1] === "block") {
         disperseData(req, res, db.data.blocks, "block", data);
       } else if (splitUrl[1] === "inv") {
@@ -114,6 +121,10 @@ const requestListener = async (req, res) => {
   res.writeHead(500);
   res.end();
 };
+
+function validData(data) {
+  return data["id"] === createHash("sha256").update(data["content"]).digest("hex");
+}
 
 function registerAddress(address) {
   db.read();
@@ -183,4 +194,4 @@ server.listen(PORT, HOST, () => {
 
 setInterval(poller, POLLING_INTERVAL_MILLIS);
 
-console.log(createHash("sha256").update("Test 5 block").digest("hex"));
+console.log(createHash("sha256").update("Another another block").digest("hex"));

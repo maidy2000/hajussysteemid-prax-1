@@ -36,7 +36,8 @@ const poller = async () => {
 
 const requestListener = async (req, res) => {
   const splitUrl = req.url.split("/");
-  res.setHeader("port", PORT);
+  // res.setHeader("port", PORT);
+
   if (splitUrl.length < 2 || !["blocks", "addresses", "getData", "block", "inv"].includes(splitUrl[1])) {
     res.writeHead(404, "Not Found");
     res.end();
@@ -70,54 +71,57 @@ const requestListener = async (req, res) => {
       }
     })
     return;
-  }
-
-  if (splitUrl[1] === "blocks") {
-    if (splitUrl.length === 3) {
-      const target = splitUrl[2];
-      let correctBlocks = [];
-      let found = false;
-      for (let i = 0; i < db.data.blocks.length; i++) {
-        if (found) {
-          correctBlocks.push(db.data.blocks[i]);
-        } else if (db.data.blocks[i]["id"] === target) {
-          found = true;
+  } else if (req.method === "GET") {
+    if (splitUrl[1] === "blocks") {
+      if (splitUrl.length === 3) {
+        const target = splitUrl[2];
+        let correctBlocks = [];
+        let found = false;
+        for (let i = 0; i < db.data.blocks.length; i++) {
+          if (found) {
+            correctBlocks.push(db.data.blocks[i]);
+          } else if (db.data.blocks[i]["id"] === target) {
+            found = true;
+          }
         }
+        res.writeHead(200);
+        res.end(JSON.stringify(correctBlocks.map(x => x["id"])));
+        registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
+        return;
       }
       res.writeHead(200);
-      res.end(JSON.stringify(correctBlocks.map(x => x["id"])));
+      res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
       registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
       return;
     }
-    res.writeHead(200);
-    res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
-    registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
-    return;
-  }
 
-  if (splitUrl[1] === "addresses") {
-    res.writeHead(200);
-    res.end(JSON.stringify(db.data.addresses));
-    registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
-    return;
-  }
-
-  if (splitUrl[1] === "getData") {
-    if (splitUrl.length === 3) {
-      const target = splitUrl[2];
-      for (let i = 0; i < db.data.blocks.length; i++) {
-        if (db.data.blocks[i]["id"] === target) {
-          res.writeHead(200);
-          res.end(JSON.stringify(db.data.blocks[i]));
-          await registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
-          return;
-        }
-      }
-      // RETURN NO BLOCK
+    if (splitUrl[1] === "addresses") {
+      res.writeHead(200);
+      res.end(JSON.stringify(db.data.addresses));
+      registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
+      return;
     }
-    // RETURN INVALID REQUEST
-  }
 
+    if (splitUrl[1] === "getData") {
+      if (splitUrl.length === 3) {
+        const target = splitUrl[2];
+        for (let i = 0; i < db.data.blocks.length; i++) {
+          if (db.data.blocks[i]["id"] === target) {
+            res.writeHead(200);
+            res.end(JSON.stringify(db.data.blocks[i]));
+            await registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
+            return;
+          }
+        }
+        res.writeHead(406);
+        res.end(JSON.stringify({"error": "No block with id " + target}));
+        return;
+      }
+      res.writeHead(406);
+      res.end(JSON.stringify({"error": "Unable to parse request"}));
+      return;
+    }
+  }
   res.writeHead(500);
   res.end();
 };

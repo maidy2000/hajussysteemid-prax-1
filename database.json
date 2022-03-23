@@ -4,15 +4,6 @@
     "127.0.0.1:5556",
     "127.0.0.1:5555"
   ],
-  "blocks": [
-    {
-      "id": "9a59c5f8229aab55e9f855173ef94485aab8497eea0588f365c871d6d0561722",
-      "content": "block1"
-    },
-    {
-      "id": "6d0b07ee773591f2a1b492d3ca65afdefc90e1cadfcc542a74048bb0ae7daa27",
-      "content": "block2"
-    }
-  ],
+  "blocks": [],
   "transactions": []
 }

@@ -21,7 +21,7 @@ const poller = async () => {
       }).catch(() => {});
 
     await axios
-      .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1], { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  })
+      .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1]["id"], { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  })
       .then((res) => {
         res.data.forEach((block) => getBlockFromAddress(block, address));
       }).catch(() => {});

@@ -24,7 +24,7 @@ const poller = async () => {
       });
 
     await axios
-      .get("http://" + address + "/blocks", { timeout: REQUEST_TIMEOUT_MILLIS })
+      .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1], { timeout: REQUEST_TIMEOUT_MILLIS })
       .then((res) => {
         res.data.forEach((block) => getBlockFromAddress(block, address));
       })
@@ -53,7 +53,6 @@ const requestListener = async (req, res) => {
   if (splitUrl[1] === "blocks") {
     if (splitUrl.length === 3) {
       const target = splitUrl[2];
-      console.log("Looking for " + target);
       let correctBlocks = [];
       let found = false;
       for (let i = 0; i < db.data.blocks.length; i++) {
@@ -110,6 +109,9 @@ async function registerAddress(address) {
 }
 
 async function getBlockFromAddress(id, address) {
+  if (db.data.blocks.map(x => x["id"]).includes(id)) {
+    return;
+  }
   await axios.get("http://" + address + "/getData/" + id, { timeout: REQUEST_TIMEOUT_MILLIS })
       .then((res) => {
         writeBlock(res["content"]);

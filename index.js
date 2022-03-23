@@ -20,11 +20,20 @@ const poller = async () => {
         res.data.forEach((newAddress) => registerAddress(newAddress));
       }).catch(() => {});
 
-    await axios
-      .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1]["id"], { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  })
-      .then((res) => {
-        res.data.forEach((block) => getBlockFromAddress(block, address));
-      }).catch(() => {});
+    if (db.data.blocks.length === 0) {
+      await axios
+          .get("http://" + address + "/blocks", { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  })
+          .then((res) => {
+            res.data.forEach((block) => getBlockFromAddress(block, address));
+          }).catch(() => {});
+    } else {
+      await axios
+          .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1]["id"], { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  })
+          .then((res) => {
+            res.data.forEach((block) => getBlockFromAddress(block, address));
+          }).catch(() => {});
+    }
+
   }
 };
 

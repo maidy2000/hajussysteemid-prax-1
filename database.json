@@ -312,5 +312,11 @@
       "id": "1d2b791648ec0fc4bf968553c56fef61e81a7a1f039c2536996f565d282dbd54",
       "content": "Test block"
     }
+  ],
+  "transactions": [
+    {
+      "id": "c9eb98aede1df756497439fef05f6be434785c4aaf4976c4c219b87f4b2fbe06",
+      "content": "Test transaction"
+    }
   ]
 }

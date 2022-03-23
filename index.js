@@ -36,7 +36,7 @@ const poller = async () => {
 
 const requestListener = async (req, res) => {
   const splitUrl = req.url.split("/");
-  if (splitUrl.length < 2 || !["blocks", "addresses", "getData", "block"].includes(splitUrl[1])) {
+  if (splitUrl.length < 2 || !["blocks", "addresses", "getData", "block", "inv"].includes(splitUrl[1])) {
     res.writeHead(404, "Not Found");
     res.end();
     return;
@@ -55,22 +55,42 @@ const requestListener = async (req, res) => {
     req.on("data", chunk => { data += chunk.toString() });
     req.on("end", () => {
       data = JSON.parse(data);
-      if (!db.data.blocks.map(x => x["id"]).includes(data["id"])) {
-        writeBlock(data["content"]);
-        res.end("1");
-        res.writeHead(200);
-        db.data.addresses.forEach(async (address) => {
-          await axios.post(
-              "http://" + address + "/block",
-              {id: data["id"], content: data["content"]},
-              { timeout: REQUEST_TIMEOUT_MILLIS }
-          ).catch(() => {
-            // ignore errors
+      if (splitUrl[1] === "block") {
+        if (!db.data.blocks.map(x => x["id"]).includes(data["id"])) {
+          writeBlock(data["content"]);
+          res.end("1");
+          res.writeHead(200);
+          db.data.addresses.forEach(async (address) => {
+            await axios.post(
+                "http://" + address + "/block",
+                {id: data["id"], content: data["content"]},
+                { timeout: REQUEST_TIMEOUT_MILLIS }
+            ).catch(() => {
+              // ignore errors
+            });
           });
-        });
-      } else {
-        res.end(JSON.stringify({"error": "Block already exists"}))
-        res.writeHead(406);
+        } else {
+          res.end(JSON.stringify({"error": "Block already exists"}))
+          res.writeHead(406);
+        }
+      } else if (splitUrl[1] === "inv") {
+        if (!db.data.transactions.map(x => x["id"]).includes(data["id"])) {
+          writeTransaction(data["content"]);
+          res.end("1");
+          res.writeHead(200);
+          db.data.addresses.forEach(async (address) => {
+            await axios.post(
+                "http://" + address + "/inv",
+                {id: data["id"], content: data["content"]},
+                { timeout: REQUEST_TIMEOUT_MILLIS }
+            ).catch(() => {
+              // ignore errors
+            });
+          });
+        } else {
+          res.end(JSON.stringify({"error": "Transaction already exists"}))
+          res.writeHead(406);
+        }
       }
     })
     return;
@@ -161,6 +181,20 @@ function writeBlock(content) {
   db.write();
 }
 
+function writeTransaction(content) {
+  db.read();
+
+  var hash = createHash("sha256").update(content).digest("hex");
+
+  // don't allow duplicates
+  if (db.data.transactions.some((block) => block.id === hash)) {
+    return;
+  }
+
+  db.data.transactions.push({ id: hash, content: content });
+  db.write();
+}
+
 await db.read();
 
 const server = http.createServer(requestListener);
@@ -170,4 +204,4 @@ server.listen(PORT, HOST, () => {
 
 setInterval(poller, POLLING_INTERVAL_MILLIS);
 
-// console.log(createHash("sha256").update("Test block").digest("hex"));
+console.log(createHash("sha256").update("Test transaction").digest("hex"));

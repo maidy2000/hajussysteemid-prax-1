@@ -57,45 +57,9 @@ const requestListener = async (req, res) => {
     req.on("end", () => {
       data = JSON.parse(data);
       if (splitUrl[1] === "block") {
-        if (!db.data.blocks.map(x => x["id"]).includes(data["id"])) {
-          writeBlock(data["content"]);
-          res.writeHead(200);
-          res.end("1");
-          registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
-          db.data.addresses.forEach(async (address) => {
-            axios.post(
-                "http://" + address + "/block",
-                {id: data["id"], content: data["content"]},
-                { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  }
-            ).catch(() => {
-              // ignore errors
-            });
-          });
-        } else {
-          res.writeHead(406);
-          res.end(JSON.stringify({"error": "Block already exists"}))
-          registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
-        }
+        disperseData(req, res, db.data.blocks, "block", data);
       } else if (splitUrl[1] === "inv") {
-        if (!db.data.transactions.map(x => x["id"]).includes(data["id"])) {
-          writeTransaction(data["content"]);
-          res.writeHead(200);
-          res.end("1");
-          registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
-          db.data.addresses.forEach(async (address) => {
-            axios.post(
-                "http://" + address + "/inv",
-                {id: data["id"], content: data["content"]},
-                { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  }
-            ).catch(() => {
-              // ignore errors
-            });
-          });
-        } else {
-          res.writeHead(406);
-          res.end(JSON.stringify({"error": "Transaction already exists"}))
-          registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
-        }
+        disperseData(req, res, db.data.transactions, "inv", data);
       }
     })
     return;
@@ -175,31 +139,38 @@ async function getBlockFromAddress(id, address) {
       });
 }
 
-function writeBlock(content) {
-  db.read();
-
-  var hash = createHash("sha256").update(content).digest("hex");
-
-  // don't allow duplicates
-  if (db.data.blocks.some((block) => block.id === hash)) {
-    return;
+function disperseData(req, res, container, urlEnd, data) {
+  if (!container.map(x => x["id"]).includes(data["id"])) {
+    writeData(container, data["content"]);
+    res.writeHead(200);
+    res.end("1");
+    registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
+    db.data.addresses.forEach(async (address) => {
+      axios.post(
+          "http://" + address + "/" + urlEnd,
+          {id: data["id"], content: data["content"]},
+          { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  }
+      ).catch(() => {
+        // ignore errors
+      });
+    });
+  } else {
+    res.writeHead(406);
+    res.end(JSON.stringify({"error": urlEnd + " already exists"}))
+    registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
   }
-
-  db.data.blocks.push({ id: hash, content: content });
-  db.write();
 }
 
-function writeTransaction(content) {
+function writeData(container, content) {
   db.read();
-
   var hash = createHash("sha256").update(content).digest("hex");
 
   // don't allow duplicates
-  if (db.data.transactions.some((block) => block.id === hash)) {
+  if (container.some((block) => block.id === hash)) {
     return;
   }
 
-  db.data.transactions.push({ id: hash, content: content });
+  container.push({ id: hash, content: content });
   db.write();
 }
 

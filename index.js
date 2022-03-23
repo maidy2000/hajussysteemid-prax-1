@@ -59,8 +59,8 @@ const requestListener = async (req, res) => {
       if (splitUrl[1] === "block") {
         if (!db.data.blocks.map(x => x["id"]).includes(data["id"])) {
           writeBlock(data["content"]);
-          res.end("1");
           res.writeHead(200);
+          res.end("1");
           registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
           db.data.addresses.forEach(async (address) => {
             axios.post(
@@ -72,15 +72,15 @@ const requestListener = async (req, res) => {
             });
           });
         } else {
-          res.end(JSON.stringify({"error": "Block already exists"}))
           res.writeHead(406);
+          res.end(JSON.stringify({"error": "Block already exists"}))
           registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
         }
       } else if (splitUrl[1] === "inv") {
         if (!db.data.transactions.map(x => x["id"]).includes(data["id"])) {
           writeTransaction(data["content"]);
-          res.end("1");
           res.writeHead(200);
+          res.end("1");
           registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
           db.data.addresses.forEach(async (address) => {
             axios.post(
@@ -92,8 +92,8 @@ const requestListener = async (req, res) => {
             });
           });
         } else {
-          res.end(JSON.stringify({"error": "Transaction already exists"}))
           res.writeHead(406);
+          res.end(JSON.stringify({"error": "Transaction already exists"}))
           registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
         }
       }
@@ -113,21 +113,21 @@ const requestListener = async (req, res) => {
           found = true;
         }
       }
-      res.end(JSON.stringify(correctBlocks.map(x => x["id"])));
       res.writeHead(200);
-      await registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
+      res.end(JSON.stringify(correctBlocks.map(x => x["id"])));
+      registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
       return;
     }
-    res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
     res.writeHead(200);
-    await registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
+    res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
+    registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
     return;
   }
 
   if (splitUrl[1] === "addresses") {
-    res.end(JSON.stringify(db.data.addresses));
     res.writeHead(200);
-    await registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
+    res.end(JSON.stringify(db.data.addresses));
+    registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
     return;
   }
 
@@ -136,8 +136,8 @@ const requestListener = async (req, res) => {
       const target = splitUrl[2];
       for (let i = 0; i < db.data.blocks.length; i++) {
         if (db.data.blocks[i]["id"] === target) {
-          res.end(JSON.stringify(db.data.blocks[i]));
           res.writeHead(200);
+          res.end(JSON.stringify(db.data.blocks[i]));
           await registerAddress(`${req.socket.remoteAddress}:${req.headers["port"]}`);
           return;
         }
@@ -151,7 +151,7 @@ const requestListener = async (req, res) => {
   res.end();
 };
 
-async function registerAddress(address) {
+function registerAddress(address) {
   db.read();
 
   if (db.data.addresses.includes(address)) {
@@ -159,7 +159,7 @@ async function registerAddress(address) {
   }
 
   db.data.addresses.push(address);
-  await db.write();
+  db.write();
 }
 
 async function getBlockFromAddress(id, address) {

@@ -26,7 +26,7 @@ const poller = async () => {
     await axios
       .get("http://" + address + "/blocks", { timeout: REQUEST_TIMEOUT_MILLIS })
       .then((res) => {
-        res.data.forEach((block) => writeBlock(block));
+        res.data.forEach((block) => getBlockFromAddress(block, address));
       })
       .catch(() => {
         // ignore errors
@@ -107,6 +107,16 @@ async function registerAddress(address) {
 
   db.data.addresses.push(address);
   await db.write();
+}
+
+async function getBlockFromAddress(id, address) {
+  await axios.get("http://" + address + "/getData/" + id, { timeout: REQUEST_TIMEOUT_MILLIS })
+      .then((res) => {
+        writeBlock(res["content"]);
+      })
+      .catch(() => {
+        // ignore errors
+      });
 }
 
 function writeBlock(content) {

@@ -1,11 +1,27 @@
 {
   "addresses": [
-    "164.92.218.56:5555"
+    "164.92.218.56:5555",
+    "123.32.123.32",
+    "213.35.151.251",
+    "85.253.51.244",
+    "127.0.0.1:5555"
   ],
   "blocks": [
     {
       "id": "ef4de9ddb6f6747d4b0f61d52997cbc9f0869310bfa170e1b66adb58a12ed255",
       "content": "My first block"
+    },
+    {
+      "id": "299e48981e8711f49310a7c99d7d3e3236228c830997a3b37f5855bbfba83aae",
+      "content": "ef4de9ddb6f6747d4b0f61d52997cbc9f0869310bfa170e1b66adb58a12ed255"
+    },
+    {
+      "id": "af72a3d2a8e09cc87a3badfe0c4e1aa3aa59271a3997a8020cb71c3dd9cc9212",
+      "content": "299e48981e8711f49310a7c99d7d3e3236228c830997a3b37f5855bbfba83aae"
+    },
+    {
+      "id": "ed5f0b36339e9d92b6c78b3abcc21c57e89ccf3a2ae8808e2ebf73a686cb9e0e",
+      "content": "af72a3d2a8e09cc87a3badfe0c4e1aa3aa59271a3997a8020cb71c3dd9cc9212"
     }
   ]
 }

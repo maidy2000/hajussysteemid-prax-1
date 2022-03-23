@@ -35,7 +35,8 @@ const poller = async () => {
 };
 
 const requestListener = async (req, res) => {
-  if (!["/blocks", "/addresses"].includes(req.url)) {
+  const splitUrl = req.url.split("/");
+  if (!["blocks", "addresses"].includes(splitUrl[1])) {
     res.writeHead(404, "Not Found");
     res.end();
     return;
@@ -49,13 +50,13 @@ const requestListener = async (req, res) => {
 
   await db.read();
 
-  if (req.url === "/blocks") {
+  if (splitUrl[1] === "blocks") {
     res.end(JSON.stringify(db.data.blocks.map((x) => x["id"])));
     res.writeHead(200);
     return;
   }
 
-  if (req.url === "/addresses") {
+  if (splitUrl[1] === "addresses") {
     res.end(JSON.stringify(db.data.addresses));
     res.writeHead(200);
     await registerAddress(`${req.socket.remoteAddress}:${PORT}`);

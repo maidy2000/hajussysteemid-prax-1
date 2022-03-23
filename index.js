@@ -36,19 +36,36 @@ const poller = async () => {
 
 const requestListener = async (req, res) => {
   const splitUrl = req.url.split("/");
-  if (splitUrl.length < 2 || !["blocks", "addresses", "getData"].includes(splitUrl[1])) {
+  if (splitUrl.length < 2 || !["blocks", "addresses", "getData", "block"].includes(splitUrl[1])) {
     res.writeHead(404, "Not Found");
     res.end();
     return;
   }
 
-  if (req.method !== "GET") {
+  if (req.method !== "GET" && req.method !== "POST") {
     res.writeHead(405, "Method Not Allowed");
     res.end();
     return;
   }
 
   await db.read();
+
+  if (req.method === "POST") {
+    let data = "";
+    req.on("data", chunk => { data += chunk.toString() });
+    req.on("end", () => {
+      data = JSON.parse(data);
+      if (!db.data.blocks.map(x => x["id"]).includes(data["id"])) {
+        writeBlock(data["content"]);
+        res.end("1");
+        res.writeHead(200);
+      } else {
+        res.end(JSON.stringify({"error": "Block already exists"}))
+        res.writeHead(406);
+      }
+    })
+    return;
+  }
 
   if (splitUrl[1] === "blocks") {
     if (splitUrl.length === 3) {
@@ -143,3 +160,5 @@ server.listen(PORT, HOST, () => {
 });
 
 setInterval(poller, POLLING_INTERVAL_MILLIS);
+
+console.log(createHash("sha256").update("Test block").digest("hex"));

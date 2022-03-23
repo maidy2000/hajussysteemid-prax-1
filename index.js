@@ -59,6 +59,15 @@ const requestListener = async (req, res) => {
         writeBlock(data["content"]);
         res.end("1");
         res.writeHead(200);
+        db.data.addresses.forEach(async (address) => {
+          await axios.post(
+              "http://" + address + "/block",
+              {id: data["id"], content: data["content"]},
+              { timeout: REQUEST_TIMEOUT_MILLIS }
+          ).catch(() => {
+            // ignore errors
+          });
+        });
       } else {
         res.end(JSON.stringify({"error": "Block already exists"}))
         res.writeHead(406);
@@ -161,4 +170,4 @@ server.listen(PORT, HOST, () => {
 
 setInterval(poller, POLLING_INTERVAL_MILLIS);
 
-console.log(createHash("sha256").update("Test block").digest("hex"));
+// console.log(createHash("sha256").update("Test block").digest("hex"));

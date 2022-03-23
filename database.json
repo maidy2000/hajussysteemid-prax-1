@@ -9,6 +9,10 @@
     {
       "id": "a8d79bb6cfe00cd5d964b8d996804fedc1d938af5482bc1fc607f5d9f493c95c",
       "content": "Test 5 block"
+    },
+    {
+      "id": "af07db7fc2b63f285e9455dcdad128d7335eb6d880c8d9e65f8c1f832bf12764",
+      "content": "Another block"
     }
   ],
   "transactions": []

@@ -13,8 +13,8 @@ const db = new Low(adapter);
 
 const poller = async () => {
   await db.read();
-  db.data.addresses.forEach((address) => {
-    axios
+  db.data.addresses.forEach(async (address) => {
+    await axios
       .get("http://" + address + "/addresses", { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT } })
       .then((res) => {
         res.data.forEach((newAddress) => registerAddress(newAddress));
@@ -23,7 +23,7 @@ const poller = async () => {
         // ignore errors
       });
 
-    axios
+    await axios
       .get("http://" + address + "/blocks/" + db.data.blocks[db.data.blocks.length - 1], { timeout: REQUEST_TIMEOUT_MILLIS, headers: { "port": PORT }  })
       .then((res) => {
         res.data.forEach((block) => getBlockFromAddress(block, address));

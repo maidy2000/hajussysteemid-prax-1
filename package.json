@@ -1,22 +1,29 @@
 {
-  "name": "hajussysteemid-prax-1",
-  "type": "module",
+  "name": "prax",
   "version": "1.0.0",
-  "description": "http://lambda.ee/wiki/Vorgurakendused_2_prax_1_2022_kevad",
-  "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/maidy2000/hajussysteemid-prax-1.git"
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "start": "tsc && node dist/app.js",
+    "lint": "eslint . --ext .ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/maidy2000/hajussysteemid-prax-1/issues"
+  "devDependencies": {
+    "@types/body": "^5.1.1",
+    "@types/minimist": "^1.2.2",
+    "@types/node": "^17.0.27",
+    "@typescript-eslint/eslint-plugin": "^5.19.0",
+    "@typescript-eslint/parser": "^5.19.0",
+    "eslint": "^8.13.0",
+    "typescript": "^4.6.3"
   },
-  "homepage": "https://github.com/maidy2000/hajussysteemid-prax-1#readme",
   "dependencies": {
-    "axios": "^0.26.1",
-    "lowdb": "^3.0.0",
+    "@types/axios": "^0.14.0",
+    "axios": "^0.27.2",
+    "body": "^5.1.0",
+    "minimist": "^1.2.6",
     "pm2": "^5.2.0"
   }
 }

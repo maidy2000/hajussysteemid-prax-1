@@ -97,6 +97,7 @@ export class Controller {
   }
 
   private isBlockValid(block: Block): boolean {
+    // todo: verify hash
     return block.transactions.every((t) => this.isTransactionValid(t));
   }
 

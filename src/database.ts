@@ -33,4 +33,12 @@ export class Database {
     getTransactions(): Transaction[] {
         return [...this.db.transactionPool];
     }
+
+    removeTransactions(transactions: Transaction[]) {
+        // todo: not tested
+        const signaturesToRemove = transactions.map(t => t.signature);
+        this.db.transactionPool = this.db.transactionPool.filter(transaction => {
+            !signaturesToRemove.includes(transaction.signature)
+        })
+    }
 }

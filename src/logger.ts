@@ -9,8 +9,8 @@ export class Logger {
     setInterval(() => {
         const text = `
         Addresses - ${this.database.getAddresses()}
-        Blocks - ${this.database.getBlocks()}
-        Transactions - ${this.database.getTransactions()}
+        Blocks - ${this.database.getBlocks().map(b => b.number)}
+        Transactions - ${this.database.getTransactions().map(t => `${t.from}-${t.to}-${t.sum}`)}
         `
 
         logUpdate(text)

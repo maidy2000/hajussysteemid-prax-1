@@ -1,3 +1,5 @@
+import { Block, Transaction } from "./models";
+
 export class Database {
 
     private db = {
@@ -16,19 +18,19 @@ export class Database {
         return [...this.db.addresses];
     }
 
-    addBlock(block: string) {        
+    addBlock(block: Block) {        
         this.db.blocks.push(block);
     }
 
-    getBlocks(): string[] {
+    getBlocks(): Block[] {
         return [...this.db.blocks];
     }
 
-    addTransaction(transaction: string) {
+    addTransaction(transaction: Transaction) {
         this.db.transactions.push(transaction);
     }
 
-    getTransactions(): string[] {
+    getTransactions(): Transaction[] {
         return [...this.db.transactions];
     }
 }

@@ -1,8 +1,8 @@
 import axios from "axios";
 import { Database } from "./database";
+import { Block, Transaction } from "./models";
 
 export class Controller {
-
   readonly endpoints = [
     {
       route: "/blocks",
@@ -42,24 +42,24 @@ export class Controller {
   }
 
   postBlock({ req, res, body }) {
-    // todo: validation?
+    const block: Block = body;
 
-    if (this.database.getBlocks().includes(body)) {
+    if (!this.isBlockValid(block)) {
       return;
     }
 
-    this.database.addBlock(body);
+    this.database.addBlock(block);
   }
 
   postTransaction({ req, res, body }) {
-    // todo: validation?
+    const transaction: Transaction = body;
 
-    if (this.database.getTransactions().includes(body)) {
+    if (!this.isTransactionValid(transaction)) {
       return;
     }
 
-    this.database.addTransaction(body);
-    this.disperseTransaction(body)
+    this.database.addTransaction(transaction);
+    this.disperseTransaction(body);
   }
 
   postNodes({ req, res, body }) {
@@ -82,9 +82,24 @@ export class Controller {
     return this.database.getAddresses();
   }
 
-  private disperseTransaction(transaction: string) {
-    this.database.getAddresses().forEach(address => {
-      axios.post(`http://${address}/transactions`, transaction)
-    })
+  private disperseTransaction(transaction: Transaction) {
+    this.database.getAddresses().forEach((address) => {
+      axios.post(`http://${address}/transactions`, transaction);
+    });
+  }
+
+  private isBlockValid(block: Block): boolean {
+    // todo: validate all transactions and check for duplicate blocks
+    return true;
+  }
+
+  private isTransactionValid(transaction: Transaction): boolean {
+    const alreadyPresent = this.database.getTransactions().some(t => t.signature === transaction.signature);
+    if (alreadyPresent) {
+      return false;
+    }
+    // todo: validate by going through all the blocks and summing up, also check for duplicates
+    let count = 0;
+    return true;
   }
 }

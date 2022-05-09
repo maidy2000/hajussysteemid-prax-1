@@ -54,6 +54,14 @@ export class Controller {
   postTransaction({ req, res, body }) {
     const transaction: Transaction = body;
 
+    const alreadyInPool = this.database
+      .getTransactions()
+      .some((t) => t.signature === transaction.signature);
+
+    if (alreadyInPool) {
+      return;
+    }
+
     if (!this.isTransactionValid(transaction)) {
       return;
     }
@@ -89,17 +97,35 @@ export class Controller {
   }
 
   private isBlockValid(block: Block): boolean {
-    // todo: validate all transactions and check for duplicate blocks
-    return true;
+    return block.transactions.every((t) => this.isTransactionValid(t));
   }
 
-  private isTransactionValid(transaction: Transaction): boolean {
-    const alreadyPresent = this.database.getTransactions().some(t => t.signature === transaction.signature);
-    if (alreadyPresent) {
-      return false;
+  private isTransactionValid(transactionToVerify: Transaction): boolean {
+    // todo: should also verify signature
+    const sender = transactionToVerify.from;
+    let balance = 0;
+
+    const blocks = this.database.getBlocks();
+    for (let bi = 0; bi < blocks.length; bi++) {
+      const block = blocks[bi];
+
+      for (let ti = 0; ti < block.transactions.length; ti++) {
+        const transaction = block.transactions[ti];
+
+        if (transaction.signature === transactionToVerify.signature) {
+          return false;
+        }
+
+        if (transaction.to === sender) {
+          balance += transaction.sum;
+        }
+
+        if (transaction.from === sender) {
+          balance -= transaction.sum;
+        }
+      }
     }
-    // todo: validate by going through all the blocks and summing up, also check for duplicates
-    let count = 0;
-    return true;
+
+    return balance >= transactionToVerify.sum;
   }
 }

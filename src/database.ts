@@ -5,7 +5,7 @@ export class Database {
     private db = {
         addresses: [],
         blocks: [],
-        transactions: []
+        transactionPool: []
     }
 
     constructor() {}
@@ -27,10 +27,10 @@ export class Database {
     }
 
     addTransaction(transaction: Transaction) {
-        this.db.transactions.push(transaction);
+        this.db.transactionPool.push(transaction);
     }
 
     getTransactions(): Transaction[] {
-        return [...this.db.transactions];
+        return [...this.db.transactionPool];
     }
 }

@@ -2,6 +2,7 @@ import { Database } from "./database";
 import { Listener } from "./listener";
 import { Poller } from "./poller";
 import minimist from "minimist";
+import { Logger } from "./logger";
 
 const argv = minimist(process.argv.slice(2));
 const PORT = argv["port"] ?? 5555;
@@ -13,3 +14,6 @@ listener.listen();
 
 const poller = new Poller(database, PORT);
 poller.startPolling();
+
+const logger = new Logger(database);
+logger.startLogging();

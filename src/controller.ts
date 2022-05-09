@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Database } from "./database";
 
 export class Controller {
@@ -24,9 +25,9 @@ export class Controller {
       fn: this.postTransaction,
     },
     {
-      route: "/node",
+      route: "/nodes",
       method: "POST",
-      fn: this.postNode,
+      fn: this.postNodes,
     },
   ];
 
@@ -48,8 +49,6 @@ export class Controller {
     }
 
     this.database.addBlock(body);
-
-    // todo: disperse if new
   }
 
   postTransaction({ req, res, body }) {
@@ -60,21 +59,18 @@ export class Controller {
     }
 
     this.database.addTransaction(body);
-
-    // todo: disperse if new
+    this.disperseTransaction(body)
   }
 
-  postNode({ req, res, body }) {
+  postNodes({ req, res, body }) {
     // todo: validation?
 
-    console.log(body);
+    console.log("post nodes:", body);
     if (this.database.getAddresses().includes(body)) {
       return;
     }
 
     this.database.addAddress(body);
-
-    // todo: disperse if new
   }
 
   getNodes({ req, res, body }) {
@@ -84,5 +80,11 @@ export class Controller {
     }
 
     return this.database.getAddresses();
+  }
+
+  private disperseTransaction(transaction: string) {
+    this.database.getAddresses().forEach(address => {
+      axios.post(`http://${address}/transactions`, transaction)
+    })
   }
 }

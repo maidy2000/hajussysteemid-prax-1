@@ -1,5 +1,4 @@
 import axios from "axios";
-import { Console } from "console";
 import { Database } from "./database";
 
 export class Poller {
@@ -9,9 +8,6 @@ export class Poller {
 
   startPolling() {
     setInterval(() => this.pollForAddresses(), 5000);
-    setInterval(() => console.log("Addresses " + this.database.getAddresses()), 5000);
-    setInterval(() => console.log("Blocks " + this.database.getBlocks()), 5000);
-    // setInterval(() => this.pollForBlocks(), 5000);
   }
 
   pollForAddresses() {

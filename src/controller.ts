@@ -23,6 +23,11 @@ export class Controller {
       method: "POST",
       fn: this.postTransaction,
     },
+    {
+      route: "/node",
+      method: "POST",
+      fn: this.postNode,
+    },
   ];
 
   private database: Database;
@@ -55,6 +60,19 @@ export class Controller {
     }
 
     this.database.addTransaction(body);
+
+    // todo: disperse if new
+  }
+
+  postNode({ req, res, body }) {
+    // todo: validation?
+
+    console.log(body);
+    if (this.database.getAddresses().includes(body)) {
+      return;
+    }
+
+    this.database.addAddress(body);
 
     // todo: disperse if new
   }

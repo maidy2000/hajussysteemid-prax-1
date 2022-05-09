@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Console } from "console";
 import { Database } from "./database";
 
 export class Poller {
@@ -8,7 +9,9 @@ export class Poller {
 
   startPolling() {
     setInterval(() => this.pollForAddresses(), 5000);
-    setInterval(() => this.pollForBlocks(), 5000);
+    setInterval(() => console.log("Addresses " + this.database.getAddresses()), 5000);
+    setInterval(() => console.log("Blocks " + this.database.getBlocks()), 5000);
+    // setInterval(() => this.pollForBlocks(), 5000);
   }
 
   pollForAddresses() {
@@ -34,9 +37,13 @@ export class Poller {
   private async fetchAddressesFrom(address: string): Promise<string[]> {
     const response = await axios.get(`http://${address}/nodes`, {
       headers: { port: this.PORT },
+    })
+    .catch(() => {
+        console.log("Invalid request");
     });
-
-    return response.data;
+    if (response) {
+      return response.data;
+    }
   }
 
   private async fetchBlocksFrom(address: string): Promise<string[]> {

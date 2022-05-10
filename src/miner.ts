@@ -1,5 +1,5 @@
-import axios from "axios";
 import { createHash } from "crypto";
+import { BlockchainService } from "./blockchain.service";
 import { Database } from "./database";
 import { Logger } from "./logger";
 import { Block, Transaction } from "./models";
@@ -7,6 +7,7 @@ import { Block, Transaction } from "./models";
 export class Miner {
   private database = Database.getInstance();
   private logger = Logger.getInstance();
+  private bsService = BlockchainService.getInstance();
 
   private lastFinished = true;
 
@@ -15,6 +16,8 @@ export class Miner {
   startMining() {
     setInterval(() => {
       if (this.database.getTransactions().length === 0) {
+        this.lastFinished = true;
+        this.logger.mining = false;
         return;
       }
 
@@ -31,7 +34,7 @@ export class Miner {
 
     const transactions = [
       this.createFirstTransactionOfBlock(),
-      ...this.database.getTransactions().splice(0, 5)
+      ...this.database.getTransactions().splice(0, 5),
     ];
 
     const lastHash = this.database.getBlocks().at(-1).hash;
@@ -58,20 +61,19 @@ export class Miner {
       }
 
       hashes += 1;
-      if (hashes > 1e5 || bestCount >= 5) {
+      if (hashes > 1e5 || bestCount >= 6) {
         this.lastFinished = true;
         break;
       }
     }
 
-    if (bestCount < 5) {
+    if (bestCount < 6) {
       return;
     }
 
     this.logger.mining = false;
-    this.database.removeTransactions(transactions);
     const block = this.createBlock(transactions, bestNonce, bestHash);
-    this.saveAndPublishBlock(block);
+    this.bsService.handleNewBlock(block);
   }
 
   private countZeroes(hash) {
@@ -111,20 +113,13 @@ export class Miner {
     };
   }
 
-  private saveAndPublishBlock(block: Block) {
-    this.database.addBlock(block);
-    this.database.getAddresses().forEach((address) => {
-      axios.post(`http://${address}/blocks`, block);
-    });
-  }
-
   private createFirstTransactionOfBlock(): Transaction {
     return {
       from: null,
       to: this.OWNER,
       sum: 0.1,
-      timestamp: (new Date()).toISOString(),
-      signature: this.OWNER + this.randomString(4) // todo: signature
-    }
+      timestamp: new Date().toISOString(),
+      signature: this.OWNER + this.randomString(4), // todo: signature
+    };
   }
 }

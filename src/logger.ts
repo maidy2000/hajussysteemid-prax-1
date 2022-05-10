@@ -22,7 +22,7 @@ export class Logger {
     setInterval(() => {
         const text = `
         Addresses - ${this.database.getAddresses()}
-        Blocks - ${this.database.getBlocks().map(b => `${b.number}-${b.hash.slice(0, 10)}`)}
+        Blocks - ${this.database.getBlocks().map(b => `${b.number}-${b.hash.slice(0, 10)}...`)}
         Transactions - ${this.database.getTransactions().map(t => `${t.from}->${t.to}=${t.sum}`)}
         Mining - ${this.mining}
         `

@@ -1,8 +1,11 @@
 import axios from "axios";
+import { BlockchainService } from "./blockchain.service";
 import { Database } from "./database";
+import { Block } from "./models";
 
 export class Poller {
   private database = Database.getInstance();
+  private bsService = BlockchainService.getInstance();
 
   constructor(private PORT: number) {
     axios.defaults.timeout = 1000;
@@ -10,6 +13,7 @@ export class Poller {
 
   startPolling() {
     setInterval(() => this.pollForAddresses(), 5000);
+    setInterval(() => this.pollForBlocks(), 5000);
   }
 
   pollForAddresses() {
@@ -22,15 +26,15 @@ export class Poller {
       );
   }
 
-  // pollForBlocks() {
-  //   this.database
-  //     .getAddresses()
-  //     .forEach((address) =>
-  //       this.fetchBlocksFrom(address).then((results) =>
-  //         this.saveBlocks(results)
-  //       )
-  //     );
-  // }
+  pollForBlocks() {
+    this.database
+      .getAddresses()
+      .forEach((address) =>
+        this.fetchBlocksFrom(address).then((results) =>
+          this.bsService.handleNewBlocks(results)
+        )
+      );
+  }
 
   private async fetchAddressesFrom(address: string): Promise<string[]> {
     const response = await axios
@@ -43,10 +47,12 @@ export class Poller {
     }
   }
 
-  // private async fetchBlocksFrom(address: string): Promise<string[]> {
-  //   const response = await axios.get(`http://${address}/blocks`);
-  //   return response.data;
-  // }
+  private async fetchBlocksFrom(address: string): Promise<Block[]> {
+    const response = await axios.get(`http://${address}/blocks`).catch();
+    if (response) {
+      return response.data;
+    }
+  }
 
   private saveAddresses(addresses: string[]) {
     if (!addresses) {
@@ -58,15 +64,4 @@ export class Poller {
       .filter((address) => !oldAdresses.includes(address))
       .forEach((address) => this.database.addAddress(address));
   }
-
-  // private saveBlocks(blocks: string[]) {
-  //   if (!blocks) {
-  //     return;
-  //   }
-
-  //   const oldBlocks = this.database.getBlocks();
-  //   blocks
-  //     .filter((block) => !oldBlocks.includes(block))
-  //     .forEach((block) => this.database.addBlock(block));
-  // }
 }

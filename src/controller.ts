@@ -1,4 +1,4 @@
-import axios from "axios";
+import { BlockchainService } from "./blockchain.service";
 import { Database } from "./database";
 import { Block, Transaction } from "./models";
 
@@ -32,6 +32,7 @@ export class Controller {
   ];
 
   private database = Database.getInstance();
+  private bsService = BlockchainService.getInstance();
 
   getBlocks({ req, res, body }) {
     return this.database.getBlocks();
@@ -39,31 +40,12 @@ export class Controller {
 
   postBlock({ req, res, body }) {
     const block: Block = body;
-
-    if (!this.isBlockValid(block)) {
-      return;
-    }
-
-    this.database.addBlock(block);
+    this.bsService.handleNewBlock(block);
   }
 
   postTransaction({ req, res, body }) {
-    const transaction: Transaction = body;    
-
-    const alreadyInPool = this.database
-      .getTransactions()
-      .some((t) => t.signature === transaction.signature);
-
-    if (alreadyInPool) {
-      return;
-    }
-
-    if (!this.isTransactionValid(transaction)) {
-      return;
-    }
-
-    this.database.addTransaction(transaction);
-    this.disperseTransaction(body);
+    const transaction: Transaction = body;
+    this.bsService.handleNewTransaction(transaction);
   }
 
   postNodes({ req, res, body }) {
@@ -83,63 +65,5 @@ export class Controller {
     }
 
     return this.database.getAddresses();
-  }
-
-  private disperseTransaction(transaction: Transaction) {
-    this.database.getAddresses().forEach((address) => {
-      axios.post(`http://${address}/transactions`, transaction);
-    });
-  }
-
-  private isBlockValid(block: Block): boolean {
-    // todo: verify hash
-
-    for (let i = 1; i < block.transactions.length; i++) {
-      const transaction = block.transactions[i];
-      if (transaction.from === null) {
-        return false
-      }
-    }
-  
-    return block.transactions.every((t) => this.isTransactionValid(t));
-  }
-
-  private isTransactionValid(transactionToVerify: Transaction): boolean {
-    // todo: should also verify signature
-
-    if (transactionToVerify.sum <= 0) {
-      return false;
-    }
-
-    const sender = transactionToVerify.from;
-
-    if (sender === null) {
-      return true;
-    }
-
-    let balance = 0;
-
-    const blocks = this.database.getBlocks();
-    for (let bi = 0; bi < blocks.length; bi++) {
-      const block = blocks[bi];
-
-      for (let ti = 0; ti < block.transactions.length; ti++) {
-        const transaction = block.transactions[ti];
-
-        if (transaction.signature === transactionToVerify.signature) {
-          return false;
-        }
-
-        if (transaction.to === sender) {
-          balance += transaction.sum;
-        }
-
-        if (transaction.from === sender) {
-          balance -= transaction.sum;
-        }
-      }
-    }
-
-    return balance >= transactionToVerify.sum;
   }
 }

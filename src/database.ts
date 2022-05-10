@@ -56,6 +56,10 @@ export class Database {
     return this.db.blocks.at(-1);
   }
 
+  replaceBlocks(blocks: Block[]) {
+    this.db.blocks = blocks;
+  }
+
   addTransaction(transaction: Transaction) {
     this.db.transactionPool.push(transaction);
   }
@@ -65,10 +69,9 @@ export class Database {
   }
 
   removeTransactions(transactions: Transaction[]) {
-    // todo: not tested
     const signaturesToRemove = transactions.map((t) => t.signature);
     this.db.transactionPool = this.db.transactionPool.filter((transaction) => {
       !signaturesToRemove.includes(transaction.signature);
-    });
+    });    
   }
 }

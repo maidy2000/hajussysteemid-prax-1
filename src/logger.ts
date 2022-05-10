@@ -2,7 +2,20 @@ import { Database } from "./database";
 import logUpdate from "log-update";
 export class Logger {
 
-  constructor(private database: Database) {
+  private static instance;
+
+  private database = Database.getInstance()
+
+  mining = false;
+
+  private constructor() {}
+
+  static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+
+    return Logger.instance;
   }
 
   startLogging() {
@@ -10,7 +23,8 @@ export class Logger {
         const text = `
         Addresses - ${this.database.getAddresses()}
         Blocks - ${this.database.getBlocks().map(b => b.number)}
-        Transactions - ${this.database.getTransactions().map(t => `${t.from}-${t.to}-${t.sum}`)}
+        Transactions - ${this.database.getTransactions().map(t => `${t.from}->${t.to}=${t.sum}`)}
+        Mining - ${this.mining}
         `
 
         logUpdate(text)

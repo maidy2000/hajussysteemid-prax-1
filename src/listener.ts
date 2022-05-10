@@ -1,25 +1,21 @@
 import jsonBody from "body/json";
 import { createServer, IncomingMessage, Server, ServerResponse } from "http";
 import { Controller } from "./controller";
-import { Database } from "./database";
 
 export class Listener {
-  private static readonly HOST = "localhost";
-
   private readonly server: Server;
 
-  private controller: Controller;
+  private controller = new Controller();
 
-  constructor(private database: Database, private PORT: number) {
-    this.controller = new Controller(database);
+  constructor(private HOST: string, private PORT: number) {
     this.server = createServer((req, res) => this.handleRequest(req, res));
   }
 
   listen() {
-    this.server.listen(this.PORT, Listener.HOST, () => {
+    this.server.listen(this.PORT, this.HOST, () => {
       console.log(
         `${new Date().toLocaleString()} - Server is running on http://${
-          Listener.HOST
+          this.HOST
         }:${this.PORT}`
       );
     });

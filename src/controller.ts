@@ -31,11 +31,7 @@ export class Controller {
     },
   ];
 
-  private database: Database;
-
-  constructor(database: Database) {
-    this.database = database;
-  }
+  private database = Database.getInstance();
 
   getBlocks({ req, res, body }) {
     return this.database.getBlocks();
@@ -52,7 +48,7 @@ export class Controller {
   }
 
   postTransaction({ req, res, body }) {
-    const transaction: Transaction = body;
+    const transaction: Transaction = body;    
 
     const alreadyInPool = this.database
       .getTransactions()
@@ -73,7 +69,6 @@ export class Controller {
   postNodes({ req, res, body }) {
     // todo: validation?
 
-    console.log("post nodes:", body);
     if (this.database.getAddresses().includes(body)) {
       return;
     }

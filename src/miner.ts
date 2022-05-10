@@ -1,11 +1,33 @@
+import axios from "axios";
 import { createHash } from "crypto";
 import { Database } from "./database";
+import { Logger } from "./logger";
 import { Block, Transaction } from "./models";
 
 export class Miner {
-  constructor(private database: Database) {}
 
-  mine() {
+  private database = Database.getInstance();
+  private logger = Logger.getInstance();
+  private mining = false;
+
+  startMining() {
+    setInterval(() => {
+      if (this.mining) {
+        return;
+      }
+
+      if (this.database.getTransactions().length === 0) {
+        return;
+      }
+
+      this.mine();
+    }, 100)
+  }
+
+  private mine() {    
+    this.mining = true;
+    this.logger.mining = true;
+
     const transactions = this.database.getTransactions().splice(0, 5);
 
     const lastHash = this.database.getBlocks().at(-1).hash;
@@ -13,25 +35,29 @@ export class Miner {
 
     let bestNonce = "";
     let bestCount = 0;
+    let hash = "";
 
-    while (bestCount < 5) {
+    // todo: this hijacks the whole node thread?
+    while (bestCount < 6) {
       const nonce = this.randomString(32);
 
-      const result = createHash("sha512")
+      hash = createHash("sha512")
         .update(lastHash + joinedSignatures + nonce)
         .digest("hex");
-      const zeroesCount = this.countZeroes(result);
+      const zeroesCount = this.countZeroes(hash);
 
       if (zeroesCount > bestCount) {
-        console.log(zeroesCount, result, nonce);
-        bestNonce = result;
+        bestNonce = nonce;
         bestCount = zeroesCount;
       }
     }
 
     this.database.removeTransactions(transactions);
-    const block = this.createBlock(transactions, bestNonce);
+    const block = this.createBlock(transactions, bestNonce, hash);
     this.saveAndPublishBlock(block);
+
+    this.mining = false;
+    this.logger.mining = false;
   }
 
   private countZeroes(hash) {
@@ -56,11 +82,21 @@ export class Miner {
     return text;
   }
 
-  private createBlock(transactions: Transaction[], nonce: string): Block {
-    return {} as Block
+  private createBlock(transactions: Transaction[], nonce: string, hash: string): Block {
+    const lastBlock = this.database.getLastBlock();
+    return {
+      number: lastBlock.number + 1,
+      previousHash: lastBlock.hash,
+      transactions: transactions,
+      nonce: nonce,
+      hash: hash
+    };
   }
 
   private saveAndPublishBlock(block: Block) {
-    // todo:
+    this.database.addBlock(block);
+    this.database.getAddresses().forEach((address) => {
+      axios.post(`http://${address}/blocks`, block);
+    })
   }
 }

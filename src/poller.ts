@@ -2,7 +2,9 @@ import axios from "axios";
 import { Database } from "./database";
 
 export class Poller {
-  constructor(private database: Database, private PORT: number) {
+  private database = Database.getInstance();
+
+  constructor(private PORT: number) {
     axios.defaults.timeout = 1000;
   }
 
@@ -31,12 +33,11 @@ export class Poller {
   // }
 
   private async fetchAddressesFrom(address: string): Promise<string[]> {
-    const response = await axios.get(`http://${address}/nodes`, {
-      headers: { port: this.PORT },
-    })
-    .catch(() => {
-        console.log("Invalid request");
-    });
+    const response = await axios
+      .get(`http://${address}/nodes`, {
+        headers: { port: this.PORT },
+      })
+      .catch(() => {});
     if (response) {
       return response.data;
     }

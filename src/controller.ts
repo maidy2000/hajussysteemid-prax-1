@@ -93,12 +93,30 @@ export class Controller {
 
   private isBlockValid(block: Block): boolean {
     // todo: verify hash
+
+    for (let i = 1; i < block.transactions.length; i++) {
+      const transaction = block.transactions[i];
+      if (transaction.from === null) {
+        return false
+      }
+    }
+  
     return block.transactions.every((t) => this.isTransactionValid(t));
   }
 
   private isTransactionValid(transactionToVerify: Transaction): boolean {
     // todo: should also verify signature
+
+    if (transactionToVerify.sum <= 0) {
+      return false;
+    }
+
     const sender = transactionToVerify.from;
+
+    if (sender === null) {
+      return true;
+    }
+
     let balance = 0;
 
     const blocks = this.database.getBlocks();

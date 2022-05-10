@@ -7,15 +7,23 @@ import { Miner } from "./miner";
 const argv = minimist(process.argv.slice(2));
 const PORT = argv["port"] ?? 5555;
 const HOST = argv["host"] ?? "127.0.0.1";
+const OWNER = argv["owner"];
 
-const listener = new Listener(HOST, PORT);
-listener.listen();
+(() => {
+  if (!OWNER) {
+    console.log("Node must have owner: --owner [example]");
+    return;
+  }
 
-const poller = new Poller(PORT);
-poller.startPolling();
+  const listener = new Listener(HOST, PORT);
+  listener.listen();
 
-const miner = new Miner();
-miner.startMining();
+  const poller = new Poller(PORT);
+  poller.startPolling();
 
-const logger = Logger.getInstance();
-logger.startLogging();
+  const miner = new Miner(OWNER);
+  miner.startMining();
+
+  const logger = Logger.getInstance();
+  logger.startLogging();
+})();

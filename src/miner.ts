@@ -5,59 +5,73 @@ import { Logger } from "./logger";
 import { Block, Transaction } from "./models";
 
 export class Miner {
-
   private database = Database.getInstance();
   private logger = Logger.getInstance();
-  private mining = false;
+
+  private lastFinished = true;
+
+  constructor(private OWNER: string) {}
 
   startMining() {
     setInterval(() => {
-      if (this.mining) {
-        return;
-      }
-
       if (this.database.getTransactions().length === 0) {
         return;
       }
 
+      if (!this.lastFinished) {
+        return;
+      }
+
       this.mine();
-    }, 100)
+    }, 20);
   }
 
-  private mine() {    
-    this.mining = true;
+  private mine() {
     this.logger.mining = true;
 
-    const transactions = this.database.getTransactions().splice(0, 5);
+    const transactions = [
+      this.createFirstTransactionOfBlock(),
+      ...this.database.getTransactions().splice(0, 5)
+    ];
 
     const lastHash = this.database.getBlocks().at(-1).hash;
     const joinedSignatures = transactions.map((t) => t.signature).join();
 
     let bestNonce = "";
     let bestCount = 0;
-    let hash = "";
+    let bestHash = "";
 
-    // todo: this hijacks the whole node thread?
-    while (bestCount < 6) {
+    let hashes = 0;
+
+    while (true) {
+      this.lastFinished = false;
       const nonce = this.randomString(32);
 
-      hash = createHash("sha512")
+      bestHash = createHash("sha512")
         .update(lastHash + joinedSignatures + nonce)
         .digest("hex");
-      const zeroesCount = this.countZeroes(hash);
+      const zeroesCount = this.countZeroes(bestHash);
 
       if (zeroesCount > bestCount) {
         bestNonce = nonce;
         bestCount = zeroesCount;
       }
+
+      hashes += 1;
+      if (hashes > 1e5 || bestCount >= 5) {
+        this.lastFinished = true;
+        break;
+      }
     }
 
-    this.database.removeTransactions(transactions);
-    const block = this.createBlock(transactions, bestNonce, hash);
-    this.saveAndPublishBlock(block);
+    if (bestCount < 5) {
+      return;
+    }
 
-    this.mining = false;
     this.logger.mining = false;
+    this.database.removeTransactions(transactions);
+    const block = this.createBlock(transactions, bestNonce, bestHash);
+    this.saveAndPublishBlock(block);
   }
 
   private countZeroes(hash) {
@@ -82,14 +96,18 @@ export class Miner {
     return text;
   }
 
-  private createBlock(transactions: Transaction[], nonce: string, hash: string): Block {
+  private createBlock(
+    transactions: Transaction[],
+    nonce: string,
+    hash: string
+  ): Block {
     const lastBlock = this.database.getLastBlock();
     return {
       number: lastBlock.number + 1,
       previousHash: lastBlock.hash,
       transactions: transactions,
       nonce: nonce,
-      hash: hash
+      hash: hash,
     };
   }
 
@@ -97,6 +115,16 @@ export class Miner {
     this.database.addBlock(block);
     this.database.getAddresses().forEach((address) => {
       axios.post(`http://${address}/blocks`, block);
-    })
+    });
+  }
+
+  private createFirstTransactionOfBlock(): Transaction {
+    return {
+      from: null,
+      to: this.OWNER,
+      sum: 0.1,
+      timestamp: (new Date()).toISOString(),
+      signature: this.OWNER + this.randomString(4) // todo: signature
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { BlockchainService } from "./blockchain.service";
+import { BlockchainService } from "./blockchain";
 import { Database } from "./database";
 import { Logger } from "./logger";
 import { Block, Transaction } from "./models";

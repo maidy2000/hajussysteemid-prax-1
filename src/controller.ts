@@ -1,4 +1,4 @@
-import { BlockchainService } from "./blockchain.service";
+import { BlockchainService } from "./blockchain";
 import { Database } from "./database";
 import { Block, Transaction } from "./models";
 

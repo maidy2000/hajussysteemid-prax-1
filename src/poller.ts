@@ -7,7 +7,7 @@ export class Poller {
   private database = Database.getInstance();
   private bsService = BlockchainService.getInstance();
 
-  constructor(private PORT: number) {
+  constructor(private HOST: string, private PORT: number) {
     axios.defaults.timeout = 1000;
   }
 
@@ -17,13 +17,12 @@ export class Poller {
   }
 
   pollForAddresses() {
-    this.database
-      .getAddresses()
-      .forEach((address) =>
-        this.fetchAddressesFrom(address).then((results) =>
-          this.saveAddresses(results)
-        )
-      );
+    this.database.getAddresses().forEach((address) =>
+      this.fetchAddressesFrom(address).then((results) => {
+        const filteredResults = results.filter(a => a !== `${this.HOST}:${this.PORT}`);
+        this.saveAddresses(filteredResults);
+      })
+    );
   }
 
   pollForBlocks() {

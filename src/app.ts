@@ -18,7 +18,7 @@ const OWNER = argv["owner"];
   const listener = new Listener(HOST, PORT);
   listener.listen();
 
-  const poller = new Poller(PORT);
+  const poller = new Poller(HOST, PORT);
   poller.startPolling();
 
   const miner = new Miner(OWNER);

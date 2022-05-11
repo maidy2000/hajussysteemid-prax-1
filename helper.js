@@ -13,12 +13,12 @@ const users = [
   "-----BEGIN RSA PRIVATE KEY-----MIIBOwIBAAJBAJ5wqJLL63/Z1Fz0FmevNJR3AKzkvU6r7WHYLgQuQlKSVT3adYZoGkO0m7J1LegiWbhjbqLZ6if75V+5S9b1E+kCAwEAAQJAbM/wZgjYbtDaMRCNhp3kXYYxF4xsmugmuojuaX6fm/a7yPPCFWOxSr48NE+f/mP0Dim91YGNC2QloaX4jHuwgQIhAPUf5aQMIqjhkmARM74m90aUMf9YP6zwWdh6z6w1vOt5AiEApXg020EH7/eq2l83Um2tlVg/oaHeEuUkeGqmpLql3/ECIQCdkL5doAtbgXxE0mnvTj7fGH23BHQR54HpXLBHo1doCQIgIvGPt/2zv2l+Gz+gXzfqQG+ygF++lh7t5MAhEQiZnwECIQCVdYEcYDv/QuHJiVipXT3bzoeafDhzK+qSkNSH8xnvFA==-----END RSA PRIVATE KEY-----",
 ];
 
-const selectUserInput = prompt("Choose user (0-2): ");
+const selectUserInput = prompt("Choose sender (0-2): ");
 const selectedUserPrivate = users[parseInt(selectUserInput)];
 const selectedUserKey = new NodeRSA(selectedUserPrivate);
 const selectedUserPublic = selectedUserKey.exportKey("public").split('\n').join('');
 
-const targetUserInput = prompt("Choose user(0-2): ");
+const targetUserInput = prompt("Choose receiver (0-2): ");
 const targetUserPrivate = users[parseInt(targetUserInput)];
 const targetUserKey = new NodeRSA(targetUserPrivate);
 const targetUserPublic = targetUserKey.exportKey("public").split('\n').join('');

@@ -10,6 +10,7 @@ export class Miner {
   private bsService = BlockchainService.getInstance();
 
   private lastFinished = true;
+  private readonly NONCE_DIFFICULTY = 5;
 
   constructor(private OWNER: string) {}
 
@@ -61,13 +62,13 @@ export class Miner {
       }
 
       hashes += 1;
-      if (hashes > 1e5 || bestCount >= 5) {
+      if (hashes > 1e5 || bestCount >= this.NONCE_DIFFICULTY) {
         this.lastFinished = true;
         break;
       }
     }
 
-    if (bestCount < 5) {
+    if (bestCount < this.NONCE_DIFFICULTY) {
       return;
     }
 

@@ -1,5 +1,6 @@
 import axios from "axios";
 import { createHash } from "crypto";
+import NodeRSA from "node-rsa";
 import { Database } from "./database";
 import { Block, Transaction } from "./models";
 
@@ -9,7 +10,7 @@ export class BlockchainService {
   private database = Database.getInstance();
   private constructor() {}
 
-  static getInstance() {
+  static getInstance(): BlockchainService {
     if (!BlockchainService.instance) {
       BlockchainService.instance = new BlockchainService();
     }
@@ -36,7 +37,10 @@ export class BlockchainService {
   handleNewBlocks(blocks: Block[]) {
     // todo: verification
     const lastOfNewBlocks = blocks.sort((a, b) => a.number - b.number).at(-1);
-    const lastOfCurrentBlocks = this.database.getBlocks().sort((a, b) => a.number - b.number).at(-1);
+    const lastOfCurrentBlocks = this.database
+      .getBlocks()
+      .sort((a, b) => a.number - b.number)
+      .at(-1);
 
     if (lastOfNewBlocks.number > lastOfCurrentBlocks.number) {
       this.database.replaceBlocks(blocks);
@@ -79,22 +83,35 @@ export class BlockchainService {
         return false;
       }
     }
-
+    
     // Validate every transaction
     return block.transactions.every((t) => this.isTransactionValid(t));
   }
 
-  private isTransactionValid(transactionToVerify: Transaction): boolean {
-    // todo: should also verify signature
+  private isTransactionValid(toVerify: Transaction): boolean {
 
-    if (transactionToVerify.sum <= 0) {
-      return false;
-    }
-
-    const sender = transactionToVerify.from;
+    const sender = toVerify.from;
 
     if (sender === null) {
       return true;
+    }
+
+    const key = new NodeRSA(toVerify.from);
+
+    const transactionBody = `${toVerify.from}${toVerify.to}${toVerify.sum}${toVerify.timestamp}`;
+    const verifiedSignature = key.verify(
+      transactionBody as any,
+      toVerify.signature as any,
+      "utf8",
+      "base64"
+    );
+
+    if (!verifiedSignature) {
+      return false;
+    }
+
+    if (toVerify.sum <= 0) {
+      return false;
     }
 
     let balance = 0;
@@ -106,7 +123,7 @@ export class BlockchainService {
       for (let ti = 0; ti < block.transactions.length; ti++) {
         const transaction = block.transactions[ti];
 
-        if (transaction.signature === transactionToVerify.signature) {
+        if (transaction.signature === toVerify.signature) {
           return false;
         }
 
@@ -120,7 +137,7 @@ export class BlockchainService {
       }
     }
 
-    return balance >= transactionToVerify.sum;
+    return balance >= toVerify.sum;
   }
 
   private disperseTransaction(transaction: Transaction) {

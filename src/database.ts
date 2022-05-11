@@ -7,7 +7,6 @@ export class Database {
     addresses: [],
     blocks: [
       {
-        // todo: proper first block hash
         number: 1,
         previousHash: null,
         nonce: null,
@@ -15,7 +14,8 @@ export class Database {
         transactions: [
           {
             from: null,
-            to: "Kristjan",
+            // first transaction to user 1
+            to: "-----BEGIN PUBLIC KEY-----MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMeOo2bs79TZh+3Nqip9PeRXn7BnPdHpdVfAkReWEvkts84OxUnAex50nvnaF5F4Iza9vPxZKpq1bdS5sGhbC2kCAwEAAQ==-----END PUBLIC KEY-----",
             sum: 1,
             timestamp: "2022-04-03T12:51:09Z",
             signature: "woah",
@@ -45,7 +45,8 @@ export class Database {
   }
 
   addBlock(block: Block) {
-    this.db.blocks.push(block);
+    // todo: any
+    this.db.blocks.push(block as any);
   }
 
   getBlocks(): Block[] {
@@ -57,7 +58,8 @@ export class Database {
   }
 
   replaceBlocks(blocks: Block[]) {
-    this.db.blocks = blocks;
+    // todo: any
+    this.db.blocks = blocks as any;
   }
 
   addTransaction(transaction: Transaction) {

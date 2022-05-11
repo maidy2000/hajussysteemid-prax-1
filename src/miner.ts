@@ -61,18 +61,18 @@ export class Miner {
       }
 
       hashes += 1;
-      if (hashes > 1e5 || bestCount >= 6) {
+      if (hashes > 1e5 || bestCount >= 5) {
         this.lastFinished = true;
         break;
       }
     }
 
-    if (bestCount < 6) {
+    if (bestCount < 5) {
       return;
     }
 
-    this.logger.mining = false;
-    const block = this.createBlock(transactions, bestNonce, bestHash);
+    this.logger.mining = false;    
+    const block = this.createBlock(transactions, bestNonce, bestHash);    
     this.bsService.handleNewBlock(block);
   }
 
